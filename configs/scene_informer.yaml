@@ -1,0 +1,123 @@
+model:
+  target: sceneinformer.model.model.SceneInformer 
+  monitor: val/total_loss
+  params:
+    config:
+      learning_rate: 1.0e-04
+      k_modes: 7
+      n_future_steps: 41
+      step_dim: 5 
+      encoder:
+          point_enc: 'mlp'
+          vehicle_encoder: 
+            in_dim: 11
+            out_dim: 256
+            temporal_encoding: true
+            n_hidden_layers: 2
+            hidden_dim: 512
+          pedestrian_encoder:
+            in_dim: 11
+            out_dim: 256
+            temporal_encoding: true
+            n_hidden_layers: 2
+            hidden_dim: 512
+          bike_encoder:
+            in_dim: 11
+            out_dim: 256
+            temporal_encoding: true
+            n_hidden_layers: 2
+            hidden_dim: 512
+          map_encoder: 
+            in_dim: 10
+            out_dim: 256
+            temporal_encoding: false
+      
+          d_model: 256
+          nhead: 4
+          dim_feedforward: 512
+          num_layers: 3
+          compile_transformer: true
+      decoder:
+          anchor_encoding:
+            in_dim: 2
+            out_dim: 256
+            hidden_dim: 256
+            n_hidden_layers: 3
+          token_decoder:
+            in_dim: 256
+            out_dim: 512
+            hidden_dim: 512
+            n_hidden_layers: 2
+          predictor:
+            in_dim: 512
+            out_dim: None #K_MODES * (N_FUTURE_STEPS) * step_dim
+            n_hidden_layers: 2
+            hidden_dim: 1024
+          classifier_traj:
+            in_dim: 512
+            out_dim: None #K_MODES
+            n_hidden_layers: 1
+            hidden_dim: 256
+          classifier_occ:
+            in_dim: 512
+            out_dim: 2
+            n_hidden_layers: 1
+            hidden_dim: 128
+          d_model: 256
+          nhead: 4
+          dim_feedforward: 512
+          num_layers: 2
+          num_modes: None #K_MODES
+          compile_transformer: true
+        
+      loss:
+        reg_const: 1.0
+        occ_class_const: 1.0
+        traj_class_const: 1.0
+        entropy_weight: 50.0
+
+data:
+  target: sceneinformer.utils.callbacks.DataModuleFromConfig
+  params:
+    batch_size: 10
+    num_workers: 6
+    wrap: false 
+    train:
+      target: sceneinformer.dataset.dataset.VectorizedDatasetHDF5 
+      params:
+        configs:
+          dataset: WaymoMotion
+          mode: training
+          path: PATH
+          t_past: 11
+          t_future: 40
+          full_obs: true 
+          occlusion_inf: true 
+          prob_occupied_occlusion: 0.5
+          dataset_summary: dataset_summary
+          
+    validation:
+      target: sceneinformer.dataset.occlusion_dataset_v4.VectorizedDatasetHDF5
+      params:
+        configs:
+          dataset: WaymoMotion
+          mode: validation
+          path: PATH
+          t_past: 11
+          t_future: 40
+          full_obs: true 
+          occlusion_inf: true 
+          prob_occupied_occlusion: 0.5
+          dataset_summary: dataset_summary
+  
+lightning:
+  trainer:
+    benchmark: true
+    accumulate_grad_batches: 2
+    precision: 16-mixed
+    gradient_clip_norm: 1.0
+    val_check_interval: 10000
+    limit_val_batches: 0.1
+    devices: [0]
+    accelerator: "cuda"
+  
