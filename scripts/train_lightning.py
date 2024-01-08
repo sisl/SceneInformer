@@ -214,7 +214,7 @@ if __name__ == "__main__":
                 }
             },
             "setup_callback": {
-                "target": "src.utils.callbacks.SetupCallback",
+                "target": "sceneinformer.utils.callbacks.SetupCallback",
                 "params": {
                     "resume": opt.resume,
                     "now": now,
