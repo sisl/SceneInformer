@@ -1,6 +1,6 @@
 # Scene Informer: Anchor-based Occlusion Inference and Trajectory Prediction in Partially Observable Environments
 
-This is the official implementation of the paper ["Scene Informer: Anchor-based Occlusion Inference and Trajectory Prediction in Partially Observable Environments"](https://arxiv.org/abs/2309.13893) by Bernard Lange, Jiachen Li, and Mykel J. Kochenderfer.
+This is the official implementation of the paper ["Scene Informer: Anchor-based Occlusion Inference and Trajectory Prediction in Partially Observable Environments"](https://arxiv.org/abs/2309.13893) by Bernard Lange, Jiachen Li, and Mykel J. Kochenderfer. Accepted to ICRA 2024.
 
 ![Overview](images/overview.png)
 
