@@ -1,3 +1,5 @@
+"Based on https://github.com/facebookresearch/nocturne by Eugene Vinitsky, Nathan Lichtlé and Xiaomeng Yang"
+
 import enum
 import math
 from collections import defaultdict
