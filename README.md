@@ -15,11 +15,18 @@ See env.yml
 
 Tested on Ubuntu 20.04 + Nvidia TITAN RTX 24 GB + AMD Ryzen Threadripper 3960X 24-Core
 
+## Dataset Processing 
+Download the Waymo Motion tfrecords dataset and update the paths in the script below. Processing the dataset takes time, so download a single sample from Waymo Motion (training.tfrecord-00000-of-01000) and check the Jupyter notebook in the 'scripts' directory to see if the visualization meets expectations.
+```
+sh process_dataset.sh
+```
+
+Warning: This raw dataset contains various occlusions, most of which may not be of interest. If you are looking for specific scenarios or wish to reduce the number of samples, please update the generate_dataset_summary script to filter for samples of interest.
+
 ## Training
 ```
-python scripts/train_lightning.py --base configs/scene_informer.yaml
+python scripts/train_lightning.py --base configs/scene_informer.yaml -t
 ```
-Dataset processing script will be shared soon.
 
 ## Citation
 If you find our work useful in your research, please consider citing:
