@@ -2,11 +2,11 @@
 
 # Define paths (they are all very large so plan accordingly!)
 # Raw tfrecords from Waymo Motion
-RAW_DATASET_PATH="/home/benksy/Projects/OcclusionInference/small_subset_waymo_dataset" #"/path/to/raw/dataset" 
+RAW_DATASET_PATH="/path/to/raw/dataset" 
 # Temporary files
-TEMP_RAW_DATASET_PATH="/home/benksy/Projects/SceneInformer/small_subset_waymo_dataset_temp" #"/path/to/temp/raw/dataset"
+TEMP_RAW_DATASET_PATH="/path/to/temp/raw/dataset"
 # Final occlusion dataset
-OCCLUSION_DATASET_PATH="/home/benksy/Projects/SceneInformer/occlusion_dataset"
+OCCLUSION_DATASET_PATH="path/to/occlusion_dataset"
 
 # Convert files from tfrecords and h5
 python scripts/collect_raw_meas.py --src_path $RAW_DATASET_PATH --out_path $TEMP_RAW_DATASET_PATH
