@@ -50,12 +50,12 @@ model:
             n_hidden_layers: 2
           predictor:
             in_dim: 512
-            out_dim: None #K_MODES * (N_FUTURE_STEPS) * step_dim
+            out_dim: None 
             n_hidden_layers: 2
             hidden_dim: 1024
           classifier_traj:
             in_dim: 512
-            out_dim: None #K_MODES
+            out_dim: None 
             n_hidden_layers: 1
             hidden_dim: 256
           classifier_occ:
@@ -67,8 +67,8 @@ model:
           nhead: 4
           dim_feedforward: 512
           num_layers: 2
-          num_modes: None #K_MODES
-          compile_transformer: true
+          num_modes: None
+          compile_transformer: false #Lead to segfaults on some machines.
         
       loss:
         reg_const: 1.0
@@ -97,7 +97,7 @@ data:
           dataset_summary: dataset_summary
           
     validation:
-      target: sceneinformer.dataset.occlusion_dataset_v4.VectorizedDatasetHDF5
+      target: sceneinformer.dataset.dataset.VectorizedDatasetHDF5
       params:
         configs:
           dataset: WaymoMotion

@@ -37,8 +37,8 @@ def compute_loss(output: Dict, sample: Dict, configs: Dict, metrics_data_return:
     true_valid_labels = ~torch.isnan(gt_trajectory)
     gt_trajectory = torch.nan_to_num(gt_trajectory, nan=0) 
     
-    gt_valid_anchor = used_anchors_mask * invalid_anchors_mask 
-    gt_valid_mask = true_valid_labels * used_anchors_mask[:,:,None, None, None] * invalid_anchors_mask[:,:,None, None, None] 
+    gt_valid_anchor = used_anchors_mask * invalid_anchors_mask #per anchor
+    gt_valid_mask = true_valid_labels * used_anchors_mask[:,:,None, None, None] * invalid_anchors_mask[:,:,None, None, None] # per t
     sample['gt_valid_mask'] = gt_valid_mask
     pred_trajs = predictions.reshape(B*N,K,T,D) 
     gt_trajs = gt_trajectory.reshape(B*N,1,T,2) 
@@ -75,11 +75,9 @@ def compute_loss(output: Dict, sample: Dict, configs: Dict, metrics_data_return:
     occ_entropy_loss = occ_entropy_loss.reshape(B,N)
     traj_entropy_loss = traj_entropy_loss.reshape(B,N)
 
-    entropy_mask = torch.ones_like(occ_entropy_loss).to(device)
 
-    entropy_mask[invalid_anchors[:,0], invalid_anchors[:,1]] = 0.0
-    occ_entropy_loss *= entropy_mask
-    traj_entropy_loss *= entropy_mask
+    occ_entropy_loss *= invalid_anchors_mask # Zero out invalid anchors only.
+    traj_entropy_loss *= (invalid_anchors_mask * used_anchors_mask) # Zero out invalid anchors + zero out "unused anchors". 
 
     occ_entropy_loss = occ_entropy_loss.mean((1)) #(B,)
     traj_entropy_loss = traj_entropy_loss.mean((1)) #(B,)

@@ -1,9 +1,8 @@
+import lightning.pytorch as pl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import lightning.pytorch as pl
-
-from sceneinformer.model.utils import MLPPointEncoder, PointEncoder, count_parameters
+from sceneinformer.model.utils import MLPPointEncoder, PointEncoder
 
 
 class Encoder(pl.LightningModule):
@@ -19,9 +18,7 @@ class Encoder(pl.LightningModule):
                 self.ped_encoder = MLPPointEncoder(config['pedestrian_encoder'])
                 self.bike_encoder = MLPPointEncoder(config['bike_encoder'])
             elif config['point_enc'] == 'pointnet':
-                self.veh_encoder = PointEncoder(config['vehicle_encoder'])
-                self.ped_encoder = PointEncoder(config['pedestrian_encoder'])
-                self.bike_encoder = PointEncoder(config['bike_encoder'])
+                raise NotImplementedError
         else:
             self.veh_encoder = MLPPointEncoder(config['vehicle_encoder'])
             self.ped_encoder = MLPPointEncoder(config['pedestrian_encoder'])
@@ -72,7 +69,7 @@ class Encoder(pl.LightningModule):
         ped_ind_mask = objects_types == 1
         bike_ind_mask = objects_types == 2
 
-        objects = torch.nan_to_num(objects, nan=0) # -99?
+        objects = torch.nan_to_num(objects, nan=0)
 
         vehs = objects[veh_ind_mask]
         peds = objects[ped_ind_mask]
@@ -105,7 +102,7 @@ class Encoder(pl.LightningModule):
         processed_polylines = processed_polylines.reshape(B, Nm, -1) #(B, Nm, D)
 
         obs_tokens = torch.cat([processed_objects, processed_polylines], dim=1)
-        encoded_obs = self.transformer_encoder(obs_tokens, src_key_padding_mask=src_key_padding_mask) #CHECK
+        encoded_obs = self.transformer_encoder(obs_tokens, src_key_padding_mask=src_key_padding_mask)
 
         assert not torch.isnan(encoded_obs).any(), 'NaNs in the encoded observations!'
 

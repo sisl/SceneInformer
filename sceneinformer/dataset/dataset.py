@@ -1,21 +1,21 @@
 import os
+import random
+from typing import Any, Dict, Iterable, List, Tuple, Union
+
 import h5py
 import numpy as np
-import random
-from torch.utils.data import Dataset
 import torch
-
-from typing import List, Tuple, Dict, Any, Iterable, Union
-from sceneinformer.utils.grids_tools import normalize
-from sceneinformer.utils.tools import find_points_uniformly_spread_in_the_polygon
+from sceneinformer.utils.geometry_tools import (
+    find_points_uniformly_spread_in_the_polygon, normalize)
+from torch.utils.data import Dataset
 
 MAX_SAMPLED_ANCHORS = 500
-MAX_OBS_AGENTS = 60
-MAX_INF_AGENTS = 60
+# MAX_OBS_AGENTS = 60
+# MAX_INF_AGENTS = 60
 MAX_POLYGON_CORNERS = 6
 MAX_POLYLINES = 500
 MAX_POLYLINES_LENGTH = 70
-MAX_OBS_AGENT_DIS = 59
+MAX_OBS_AGENT_DIS = 50
 MAX_POLY_DIS = 90
 
 POS_X: int = 0
@@ -125,7 +125,7 @@ class VectorizedDatasetHDF5(Dataset):
         if sample is None:
             #check to detect broken samples
             return None
-        processed_sample = self.process_sample(sample, t, object_id_perspective, occlusion_idx) #FIXME:
+        processed_sample = self.process_sample(sample, t, object_id_perspective, occlusion_idx) 
         
         if processed_sample is not None:
             processed_sample['id'] = f'{scene_id}_{sample_id}_{occ}_{data_sample_idx}'
@@ -242,7 +242,7 @@ class VectorizedDatasetHDF5(Dataset):
                 'org_labels': org_labels,
                 'num_occupied_anchors': np.array([num_occupied_anchors]),
                 'num_free_anchors': np.array([num_free_anchors]),
-                # 'all_polygon_corners': all_polygon_corners,
+                'all_polygon_corners': all_polygon_corners,
                 }
         else:
             sample = {
@@ -343,7 +343,7 @@ class VectorizedDatasetHDF5(Dataset):
         nans_anchors = np.isnan(obs_anchors).any(1)
         for i in range(nans_anchors.shape[0]):
             if nans_anchors[i]:  #np.isnan(observations[i]).all():
-                if i not in objects_to_be_predicted: #FIXME:
+                if i not in objects_to_be_predicted:
                     labels[i] = np.nan 
                 continue
         non_nan_anchor_count = np.sum(~np.isnan(obs_anchors[:,0]))
@@ -563,3 +563,53 @@ class VectorizedDatasetHDF5(Dataset):
             tensor = tensor[np.argpartition(dis, MAX_VAL)][:MAX_VAL]
         return tensor
     
+    def get_scene_info(self, scene: int, sample: int, t: int) -> None:
+        """
+        Prints information about the scene.
+
+        Args:
+            scene (int): Scene ID.
+            sample (int): Sample ID.
+            t (int): Time step.
+        """
+        filename =  f'{str(scene).zfill(5)}/{self.mode}.tfrecord-{str(scene).zfill(5)}-of-{self.scene_count:05}_{sample}.h5' 
+        path = os.path.join(self.path, filename)
+        print(f'############## Sample info ##############')
+        with h5py.File(path, 'r') as f:
+            valid_perspectives = f['/valid_perspectives'][:]
+            occluding_object_id = f['/occlusions/occluding_object_id'][t, :]
+            for idx in range(occluding_object_id.shape[0]):
+                print(f'P: {valid_perspectives[idx]}. Occluding object: {occluding_object_id[idx]}')
+    
+    def get_scene_frame(self, 
+                    scene: int, 
+                    sample: int, 
+                    t: int, 
+                    object_id_perspective: int, 
+                    occlusion_idx: int = None) -> Dict[str, Any]:
+        """
+        Returns the processed sample for the given scene, sample, and time step.
+
+        Args:
+            scene (int): Scene ID.
+            sample (int): Sample ID.
+            t (int): Time step.
+            object_id_perspective (int): Object ID.
+            occluding_object_id (int, optional): Occluding object ID. Defaults to None.
+
+        Returns:
+            Dict[str, Any]: Processed sample.
+        """
+        filename = f'{str(scene).zfill(5)}/{self.mode}.tfrecord-{str(scene).zfill(5)}-of-{self.scene_count:05}_{sample}.h5'    
+        path = os.path.join(self.path, filename)
+        self.idx = -1
+        sample = self.load_sample(path, t, ego_idx=object_id_perspective, occlusion_idx=occlusion_idx)
+        output = self.process_sample(sample, t, object_id_perspective, occlusion_idx)
+
+        output['id'] = f'{scene}_{sample}_{-1}_{-1}'
+
+        # Convert to torch tensors and add batch dimension.
+        for key in output.keys():
+            if key != 'id':
+                output[key] = torch.from_numpy(output[key]).unsqueeze(0)
+        return output

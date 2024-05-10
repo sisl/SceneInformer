@@ -1,8 +1,8 @@
+import lightning.pytorch as pl
 import torch
 import torch.nn as nn
-import lightning.pytorch as pl
-
 from sceneinformer.model.utils import MLP
+
 
 class Decoder(pl.LightningModule):
     def __init__(self, config: dict) -> None:

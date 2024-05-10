@@ -1,8 +1,14 @@
-import argparse, os, sys, datetime, glob, pathlib
-import numpy as np
-import torch
+import argparse
+import datetime
+import glob
+import os
+import pathlib
+import sys
+
 import lightning as L
 import lightning.pytorch as pl
+import numpy as np
+import torch
 from lightning.pytorch import seed_everything
 from lightning.pytorch.trainer import Trainer
 from omegaconf import OmegaConf
@@ -10,6 +16,7 @@ from omegaconf import OmegaConf
 sys.path.append(str(pathlib.Path(__file__).parents[1]))
 
 from sceneinformer.utils.utils import instantiate_from_config
+
 
 def get_parser(**parser_kwargs):
     def str2bool(v):
@@ -55,7 +62,7 @@ def get_parser(**parser_kwargs):
         "--train",
         type=str2bool,
         const=True,
-        default=True, #False,
+        default=False,
         nargs="?",
         help="train",
     )
@@ -178,29 +185,29 @@ if __name__ == "__main__":
         trainer_kwargs = dict()
 
         # default logger configs
-        logger_cfgs = {
-            "wandb": {
-                "target": "lightning.pytorch.loggers.WandbLogger",
-                "params": {
-                    "project": "OcclusionInformer",
-                    "name": nowname,
-                    "save_dir": logdir,
-                    "offline": opt.debug,
-                    "id": nowname,
-                    "log_model": "all",  
-                    "dir": logdir,
-                    "config": dict(config),
-                }
-            },
-        }
-        if "logger" in lightning_config:
-            logger_cfg = lightning_config.logger
-        else:
-            logger_cfg = OmegaConf.create()
-        logger_cfg = OmegaConf.merge(logger_cfgs, logger_cfg)
+        # logger_cfgs = {
+        #     "wandb": {
+        #         "target": "lightning.pytorch.loggers.WandbLogger",
+        #         "params": {
+        #             "project": "OcclusionInformer",
+        #             "name": nowname,
+        #             "save_dir": logdir,
+        #             "offline": opt.debug,
+        #             "id": nowname,
+        #             "log_model": "all",  
+        #             "dir": logdir,
+        #             "config": dict(config),
+        #         }
+        #     },
+        # }
+        # if "logger" in lightning_config:
+        #     logger_cfg = lightning_config.logger
+        # else:
+        #     logger_cfg = OmegaConf.create()
+        # logger_cfg = OmegaConf.merge(logger_cfgs, logger_cfg)
 
-        trainer_kwargs["logger"] = [instantiate_from_config(logger_cfgs["wandb"])]
-        (trainer_kwargs["logger"][0]).watch(model)    
+        # trainer_kwargs["logger"] = [instantiate_from_config(logger_cfgs["wandb"])]
+        # (trainer_kwargs["logger"][0]).watch(model)    
 
         default_callbacks_cfg = {
             "metrics_over_trainsteps_checkpoint": {
@@ -214,7 +221,7 @@ if __name__ == "__main__":
                 }
             },
             "setup_callback": {
-                "target": "src.utils.callbacks.SetupCallback",
+                "target": "sceneinformer.utils.callbacks.SetupCallback",
                 "params": {
                     "resume": opt.resume,
                     "now": now,
@@ -246,13 +253,14 @@ if __name__ == "__main__":
 
         trainer_kwargs["callbacks"] = [instantiate_from_config(callbacks_cfg[k]) for k in callbacks_cfg]
 
-        trainer = Trainer(precision=trainer_config["precision"],
+        trainer = Trainer(
+                          precision=trainer_config["precision"],
                           benchmark=trainer_config["benchmark"],
                           accumulate_grad_batches=trainer_config["accumulate_grad_batches"],
                           val_check_interval=trainer_config["val_check_interval"],
                           limit_val_batches=trainer_config["limit_val_batches"],
                           gradient_clip_val=trainer_config["gradient_clip_norm"],
-                          logger=trainer_kwargs["logger"],
+                          #logger=trainer_kwargs["logger"],
                           devices=trainer_config["devices"],
                           accelerator=trainer_config["accelerator"],
                           callbacks=trainer_kwargs["callbacks"]) 
@@ -291,12 +299,17 @@ if __name__ == "__main__":
 
         def divein(*args, **kwargs):
             if trainer.global_rank == 0:
-                import pudb;
+                import pudb
                 pudb.set_trace()
 
         import signal
         signal.signal(signal.SIGUSR1, melk)
         signal.signal(signal.SIGUSR2, divein)
+
+        if opt.resume:
+            trainer.fit(model, data, ckpt_path=opt.resume_from_checkpoint)
+        else:
+            trainer.fit(model, data)
 
         # run
         if opt.train:

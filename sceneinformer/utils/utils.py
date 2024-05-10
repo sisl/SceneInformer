@@ -11,7 +11,6 @@ def count_params(model, verbose=False):
         print(f"{model.__class__.__name__} has {total_params * 1.e-6:.2f} M params.")
     return total_params
 
-
 def instantiate_from_config(config):
     if not "target" in config:
         if config == '__is_first_stage__':
@@ -140,8 +139,7 @@ def my_collate_with_cuda_mem_check(batch):
     processed_batch = {}
     b_actual = 0
     for b in batch:
-        if b is None: #If sample is broken return none
-            # print(f'Broken sample:{b}') #TODO: FIX
+        if b is None: #If sample is broken, skip
             continue
         b_actual += 1
         for key in b.keys():
