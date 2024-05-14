@@ -306,11 +306,6 @@ if __name__ == "__main__":
         signal.signal(signal.SIGUSR1, melk)
         signal.signal(signal.SIGUSR2, divein)
 
-        if opt.resume:
-            trainer.fit(model, data, ckpt_path=opt.resume_from_checkpoint)
-        else:
-            trainer.fit(model, data)
-
         # run
         if opt.train:
             try:
