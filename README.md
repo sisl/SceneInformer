@@ -11,12 +11,14 @@ Navigating complex and dynamic environments requires autonomous vehicles (AVs) t
 ![Prediction](images/predictions.png)
 
 ## Setup
-See env.yml
+See env.yml.
+
+For dataset processing, we used waymo-open-dataset-tf-2-12-0==1.6.4.
 
 Tested on Ubuntu 20.04 + Nvidia TITAN RTX 24 GB + AMD Ryzen Threadripper 3960X 24-Core
 
 ## Dataset Processing 
-Download the Waymo Motion tfrecords dataset and update the paths in the script below. Processing the dataset takes time, so download a single sample from Waymo Motion (training.tfrecord-00000-of-01000) and check the Jupyter notebook in the 'scripts' directory to see if the visualization meets expectations.
+Download the Waymo Motion tfrecords dataset and update the paths in the script below. Processing the dataset takes time, so download a single sample from Waymo Motion v1.2.0 (training.tfrecord-00000-of-01000) and check the Jupyter notebook in the 'scripts' directory to see if the visualization meets expectations.
 ```
 sh process_dataset.sh
 ```
