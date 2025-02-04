@@ -38,8 +38,6 @@ def main():
     OUT_PATH = args.out_path
     n_cores = args.n_cores
 
-    #SRC_PATH = '/home/benksy/Projects/OcclusionInference/small_subset_waymo_dataset/' #'/media/benksy/Storage_SSD_2TB_2/Datasets/WaymoMotion_1_2_0/vectorized/' #'/home/benksy/Datasets/WaymoMotionRaw/training' #/uncompressed_scenario_training_training.tfrecord-00002-of-01000'
-
     for mode in ['training', 'validation']: 
 
         DATA_PATH = os.path.join(SRC_PATH, mode)
